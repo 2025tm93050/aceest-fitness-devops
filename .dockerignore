@@ -1,0 +1,19 @@
+# Keep the build context small and free of local/secret files
+.git
+.gitignore
+.gitattributes
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+htmlcov
+*.db
+legacy
+docs
+Jenkinsfile
+README.md
+Dockerfile
+.dockerignore

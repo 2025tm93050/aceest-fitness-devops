@@ -89,12 +89,11 @@ def init_db(database, admin_password):
     conn = sqlite3.connect(database)
     try:
         conn.executescript(SCHEMA)
-        exists = conn.execute("SELECT 1 FROM users WHERE username = 'admin'").fetchone()
-        if not exists:
-            conn.execute(
-                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-                ("admin", generate_password_hash(admin_password), "Admin"),
-            )
+        # OR IGNORE: several gunicorn workers may initialise the same database at once
+        conn.execute(
+            "INSERT OR IGNORE INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+            ("admin", generate_password_hash(admin_password), "Admin"),
+        )
         conn.commit()
     finally:
         conn.close()

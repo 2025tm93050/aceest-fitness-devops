@@ -51,6 +51,18 @@ class TestLogin:
         assert c.post("/login", json={"username": "admin", "password": "s3cret"}).status_code == 200
         assert c.post("/login", json={"username": "admin", "password": "admin"}).status_code == 401
 
+    def test_init_db_is_idempotent(self, tmp_path):
+        """Several workers start on one database; data must survive and admin is not duplicated."""
+        from app import create_app, init_db
+
+        db = str(tmp_path / "shared.db")
+        c = create_app({"DATABASE": db}).test_client()
+        c.post("/clients", json={"name": "Keep"})
+        init_db(db, "other")
+        c2 = create_app({"DATABASE": db}).test_client()
+        assert [x["name"] for x in c2.get("/clients").get_json()] == ["Keep"]
+        assert c2.post("/login", json={"username": "admin", "password": "admin"}).status_code == 200
+
 
 class TestPrograms:
     def test_list_programs(self, client):

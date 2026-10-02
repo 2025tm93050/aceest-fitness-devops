@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Unprivileged user to run the app (never run as root)
-RUN groupadd --system app && useradd --system --gid app --no-create-home app
+RUN groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app app
 
 # Copy requirements first so this layer is cached until dependencies change
 COPY requirements.txt .

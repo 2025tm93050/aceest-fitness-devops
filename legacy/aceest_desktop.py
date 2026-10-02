@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 DB_NAME = "aceest_fitness.db"
 
@@ -16,9 +17,8 @@ class ACEestApp:
         self.setup_data()
         self.setup_ui()
 
-    # ---------- DATABASE ----------
     def init_db(self):
-        self.conn = sqlite3.connect(DB_NAME)
+        self.conn = sqlite3.connect("aceest_fitness.db")
         self.cur = self.conn.cursor()
 
         self.cur.execute("""
@@ -40,9 +40,9 @@ class ACEestApp:
                 adherence INTEGER
             )
         """)
+
         self.conn.commit()
 
-    # ---------- DATA ----------
     def setup_data(self):
         self.programs = {
             "Fat Loss (FL)": {"factor": 22},
@@ -50,7 +50,6 @@ class ACEestApp:
             "Beginner (BG)": {"factor": 26}
         }
 
-    # ---------- UI ----------
     def setup_ui(self):
         header = tk.Label(
             self.root,
@@ -92,6 +91,7 @@ class ACEestApp:
         ttk.Button(left, text="Save Client", command=self.save_client).pack(pady=10)
         ttk.Button(left, text="Load Client", command=self.load_client).pack(pady=5)
         ttk.Button(left, text="Save Progress", command=self.save_progress).pack(pady=5)
+        ttk.Button(left, text="View Progress Chart", command=self.show_progress_chart).pack(pady=10)
 
         # RIGHT PANEL
         right = tk.LabelFrame(main, text=" Client Summary ",
@@ -101,12 +101,10 @@ class ACEestApp:
         self.summary = tk.Text(right, bg="#111", fg="white", font=("Consolas", 11))
         self.summary.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # ---------- HELPERS ----------
     def _field(self, parent, label, var):
         tk.Label(parent, text=label, bg="#1a1a1a", fg="white").pack(pady=5)
         tk.Entry(parent, textvariable=var, bg="#333", fg="white").pack()
 
-    # ---------- LOGIC ----------
     def save_client(self):
         if not self.name.get() or not self.program.get():
             messagebox.showerror("Error", "Name and Program required")
@@ -143,12 +141,12 @@ class ACEestApp:
         self.summary.insert("end", f"""
 CLIENT PROFILE
 --------------
-Name     : {name}
-Age      : {age}
-Weight   : {weight} kg
-Program  : {program}
-Calories : {calories} kcal/day
-""")
+Name      : {name}
+Age       : {age}
+Weight    : {weight} kg
+Program   : {program}
+Calories  : {calories} kcal/day
+        """)
 
     def save_progress(self):
         week = datetime.now().strftime("Week %U - %Y")
@@ -159,8 +157,39 @@ Calories : {calories} kcal/day
         self.conn.commit()
         messagebox.showinfo("Progress Saved", "Weekly progress logged")
 
+    def show_progress_chart(self):
+        if not self.name.get():
+            messagebox.showwarning("No Client", "Enter client name first")
+            return
+
+        self.cur.execute("""
+            SELECT week, adherence
+            FROM progress
+            WHERE client_name=?
+            ORDER BY id
+        """, (self.name.get(),))
+
+        data = self.cur.fetchall()
+
+        if not data:
+            messagebox.showinfo("No Data", "No progress data available for this client")
+            return
+
+        weeks = [row[0] for row in data]
+        adherence = [row[1] for row in data]
+
+        plt.figure(figsize=(8, 4))
+        plt.plot(weeks, adherence, marker="o", linewidth=2)
+        plt.title(f"Weekly Adherence Progress – {self.name.get()}")
+        plt.xlabel("Week")
+        plt.ylabel("Adherence (%)")
+        plt.ylim(0, 100)
+        plt.grid(True)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
 
 if __name__ == "__main__":
     root = tk.Tk()
-    ACEestApp(root)
+    app = ACEestApp(root)
     root.mainloop()

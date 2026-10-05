@@ -24,6 +24,8 @@ COPY requirements-dev.txt .
 RUN pip install -r requirements-dev.txt
 
 COPY . .
+# /app is read-only for the non-root user, so keep coverage data in /tmp
+ENV COVERAGE_FILE=/tmp/.coverage
 USER app
 
 CMD ["python", "-m", "pytest", "-v", "-p", "no:cacheprovider"]

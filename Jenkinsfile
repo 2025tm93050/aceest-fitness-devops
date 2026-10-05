@@ -54,7 +54,7 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                runCommand "${env.PYTHON} --version"
+                runCommand "${env.PYTHON} -c \"import sys; print('Python', sys.version.split()[0])\""
                 runCommand "${env.PYTHON} -m venv .venv"
                 runCommand "${env.VENV_PYTHON} -m pip install -r requirements-dev.txt"
             }

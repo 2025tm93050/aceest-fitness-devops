@@ -3,7 +3,7 @@
 // environment from scratch, then compiles, lints and unit-tests the application.
 // Works on Linux and Windows agents; the Docker stage runs only where Docker exists.
 
-def run(String command) {
+def runCommand(String command) {
     if (isUnix()) {
         sh command
     } else {
@@ -48,35 +48,35 @@ pipeline {
                     env.VENV_PYTHON = isUnix() ? '.venv/bin/python' : '.venv\\Scripts\\python.exe'
                     env.DOCKER_AVAILABLE = dockerAvailable() ? 'true' : 'false'
                 }
-                run 'git log -1 --oneline'
+                runCommand 'git log -1 --oneline'
             }
         }
 
         stage('Install dependencies') {
             steps {
-                run "${env.PYTHON} --version"
-                run "${env.PYTHON} -m venv .venv"
-                run "${env.VENV_PYTHON} -m pip install -r requirements-dev.txt"
+                runCommand "${env.PYTHON} --version"
+                runCommand "${env.PYTHON} -m venv .venv"
+                runCommand "${env.VENV_PYTHON} -m pip install -r requirements-dev.txt"
             }
         }
 
         stage('Build (compile)') {
             steps {
-                run "${env.VENV_PYTHON} -m compileall -q app.py fitness.py tests"
+                runCommand "${env.VENV_PYTHON} -m compileall -q app.py fitness.py tests"
             }
         }
 
         stage('Lint') {
             steps {
-                run "${env.VENV_PYTHON} -m flake8 . --count --show-source --statistics"
+                runCommand "${env.VENV_PYTHON} -m flake8 . --count --show-source --statistics"
             }
         }
 
         stage('Unit tests') {
             steps {
-                run "${env.VENV_PYTHON} -m pytest -v --junitxml=reports/junit.xml " +
+                runCommand("${env.VENV_PYTHON} -m pytest -v --junitxml=reports/junit.xml " +
                     '--cov=app --cov=fitness --cov-report=term-missing ' +
-                    '--cov-report=xml:reports/coverage.xml --cov-fail-under=90'
+                    '--cov-report=xml:reports/coverage.xml --cov-fail-under=90')
             }
             post {
                 always {
@@ -90,9 +90,9 @@ pipeline {
                 environment name: 'DOCKER_AVAILABLE', value: 'true'
             }
             steps {
-                run "docker build --target test -t ${env.IMAGE_NAME}:test ."
-                run "docker run --rm ${env.IMAGE_NAME}:test"
-                run "docker build --target production -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."
+                runCommand "docker build --target test -t ${env.IMAGE_NAME}:test ."
+                runCommand "docker run --rm ${env.IMAGE_NAME}:test"
+                runCommand "docker build --target production -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."
             }
         }
     }

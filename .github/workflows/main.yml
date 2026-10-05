@@ -67,7 +67,9 @@ jobs:
             sleep 2
           done
           curl -fs http://localhost:5000/health
-          echo "Container runs as: $(docker exec app whoami)"
+          user="$(docker exec app whoami)"
+          echo "Container runs as: $user"
+          test "$user" = "app"
           docker images "$IMAGE_NAME"
 
       - name: Show container logs

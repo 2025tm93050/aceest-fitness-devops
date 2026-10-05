@@ -20,6 +20,7 @@ The business rules come from the original ACEest desktop (Tkinter) application, 
 - [Docker](#docker)
 - [CI/CD: Jenkins and GitHub Actions](#cicd-jenkins-and-github-actions)
 - [Git workflow](#git-workflow)
+- [Screenshots](#screenshots)
 
 ## Project structure
 
@@ -38,6 +39,7 @@ aceest-fitness-devops/
 ├── Jenkinsfile                 # Jenkins BUILD & quality gate pipeline
 ├── .github/workflows/main.yml  # GitHub Actions CI/CD pipeline
 ├── pytest.ini, .flake8         # Test and lint settings
+├── docs/screenshots/           # Evidence screenshots (see "Screenshots" below)
 └── legacy/aceest_desktop.py    # Original desktop app (history only, not deployed)
 ```
 
@@ -218,3 +220,74 @@ Both pipelines run against the same GitHub repository and apply the same quality
 - `main` always holds working code. All work happens on short-lived branches named by purpose: `feature/*`, `infra/*`, `docs/*`, `fix/*`. Each branch is merged through a **pull request** after the pipeline passes.
 - Commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) style, for example `feat:`, `fix:`, `test:`, `build:`, `ci:`, `docs:`, `chore:`.
 - The history starts with the original desktop app versions committed in order and tagged `legacy-v1.0` … `legacy-v3.2.4`. The Flask service, tests, Docker image and pipelines were then added through pull requests, and the first web release is tagged `v1.0.0`.
+
+## Screenshots
+
+Evidence that every stage works. All images are in [`docs/screenshots/`](docs/screenshots/).
+
+### Git and GitHub
+
+![Public GitHub repository](docs/screenshots/01_github_repo.png)
+*Public repository with all required files, a green check on the latest commit and the passing CI/CD badge.*
+
+![Git history](docs/screenshots/02_git_history.png)
+*Git history: legacy versions with tags, feature branches merged through pull requests, and the `v1.0.0` release tag.*
+
+![Pull requests](docs/screenshots/03_pull_requests.png)
+*Six pull requests, one per feature or infrastructure branch, all merged into `main`.*
+
+### Tests, build and lint
+
+![Pytest local run](docs/screenshots/04_pytest_local.png)
+*Local Pytest run: 108 tests passed with a 99 % coverage report (the middle of the list is shortened).*
+
+![Compile and lint](docs/screenshots/05_build_lint_local.png)
+*Compile (syntax) check and `flake8` lint: no problems.*
+
+### Docker
+
+![Docker build](docs/screenshots/06_docker_build.png)
+*Production image built from scratch (`--no-cache`) and the test image; final sizes 199 MB and 223 MB.*
+
+![Pytest inside the container](docs/screenshots/07_docker_tests_in_container.png)
+*The full Pytest suite running inside the Docker container: 108 passed, 99 % coverage.*
+
+![Docker run](docs/screenshots/08_docker_run.png)
+*Production container is `healthy`, runs as the non-root user `app` and answers API requests.*
+
+### Jenkins
+
+![Jenkins login](docs/screenshots/09_jenkins_login.png)
+*Jenkins (2.580.1 LTS) with login security enabled.*
+
+![Jenkins dashboard](docs/screenshots/10_jenkins_dashboard.png)
+*Dashboard with the pipeline job `aceest-fitness-build`.*
+
+![Jenkins job page](docs/screenshots/11_jenkins_job_page.png)
+*Job page: archived `coverage.xml` and `junit.xml`, test result trend (108 passing tests per build) and the stage view.*
+
+![Jenkins stage view](docs/screenshots/12_jenkins_stage_view.png)
+*Stage view: Checkout → Install dependencies → Build (compile) → Lint → Unit tests all green for builds #2 to #5. The Docker build stage is skipped because the build agent has no Docker. Build #1 failed on a Jenkinsfile error that was then fixed.*
+
+![Jenkins changes](docs/screenshots/13_jenkins_changes.png)
+*Changes page: the commits pulled from GitHub by each build. Build #4 was started automatically by SCM polling.*
+
+![Jenkins build running](docs/screenshots/14_jenkins_build_running.png)
+*A new build (#6) running on `main`, with the stages filling in live.*
+
+![Jenkins console output](docs/screenshots/15_jenkins_console.png)
+*Console output of build #5 on `main`: clean checkout, fresh install, compile, lint, 108 tests passed, `Finished: SUCCESS` (lines marked `...` are omitted).*
+
+![Jenkins build history](docs/screenshots/16_jenkins_build_history.png)
+*Build history and JUnit test report from the Jenkins REST API.*
+
+### GitHub Actions
+
+![GitHub Actions runs](docs/screenshots/17_github_actions_runs.png)
+*The pipeline runs on every push and pull request, including the `v1.0.0` tag. The one cancelled run was replaced by a newer push to the same branch (`concurrency`).*
+
+![GitHub Actions run on main](docs/screenshots/18_github_actions_main_run.png)
+*Run on `main`: Build & Lint → Docker Image Assembly → Automated Testing, all successful.*
+
+![Pytest inside the container on GitHub Actions](docs/screenshots/19_github_actions_pytest_in_container.png)
+*Automated Testing job log: Pytest runs inside the Docker container on the GitHub runner, 108 passed.*
